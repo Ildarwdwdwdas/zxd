@@ -30,9 +30,26 @@ local function loadScript()
     
     -- Add a small delay to ensure notification is visible
     wait(1)
-    
-    -- Your main script code goes here
-    notify("Script Status", "Script loaded successfully!", 5)
+
+    -- Load the main script
+    local success, result = pcall(function()
+        -- Try to load the script from URL
+        local scriptUrl = "https://raw.githubusercontent.com/WorkinkForRoblox/Script/main/Grow%20A%20Garden"
+        local scriptContent = game:HttpGet(scriptUrl)
+        local scriptFunction = loadstring(scriptContent)
+        if scriptFunction then
+            scriptFunction()
+            return true
+        end
+        return false
+    end)
+
+    if success and result then
+        notify("Script Status", "Script loaded successfully!", 5)
+    else
+        notify("Error", "Failed to load script. Please try again.", 5)
+        warn("Script loading error:", result)
+    end
     
     -- Create a simple GUI to show the script is running
     local successGui = Instance.new("ScreenGui")
@@ -52,7 +69,7 @@ local function loadScript()
     local text = Instance.new("TextLabel")
     text.Size = UDim2.new(1, 0, 1, 0)
     text.BackgroundTransparency = 1
-    text.Text = "Script Running ✅"
+    text.Text = success and "Script Running ✅" or "Script Error ❌"
     text.TextColor3 = Color3.fromRGB(255, 255, 255)
     text.Font = Enum.Font.GothamBold
     text.TextSize = 16
@@ -65,9 +82,6 @@ local function loadScript()
     local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back)
     local tween = TweenService:Create(frame, tweenInfo, {Position = UDim2.new(0.5, -100, 0, 20)})
     tween:Play()
-    
-    -- Add your actual script functionality here
-    print("Script is now running!")
 end
 
 -- Main GUI Setup
@@ -287,7 +301,7 @@ local function playLoadingAnimations()
     local function fadeOut(obj)
         local tween = TweenService:Create(
             obj,
-            TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
             {TextTransparency = 1}
         )
         table.insert(fadeOutTweens, tween)
@@ -320,7 +334,7 @@ local function playLoadingAnimations()
     wait(0.6)
 
     -- Clean up and proceed
-    loadingFrame:Destroy()
+        loadingFrame:Destroy()
     
     -- Load the main script
     loadScript()
@@ -328,5 +342,5 @@ end
 
 -- Start the loading sequence
 spawn(function()
-    playLoadingAnimations()
+playLoadingAnimations()
 end)
