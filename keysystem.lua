@@ -14,6 +14,13 @@ pcall(function()
     currentGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
 end)
 
+-- Function to load your actual script
+local function loadScript()
+    -- Put your main script code here
+    print("Script loaded successfully!")
+    -- Add your main script code here
+end
+
 -- Main GUI Setup
 local gui = Instance.new('ScreenGui')
 gui.Name = 'XetraHub'
@@ -153,6 +160,16 @@ loadingPercent.Parent = loadingFrame
 
 -- Loading Animations with Smart Status Updates
 local function playLoadingAnimations()
+    local function fadeIn(obj, duration)
+        local tween = TweenService:Create(
+            obj,
+            TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {TextTransparency = 0}
+        )
+        tween:Play()
+        return tween
+    end
+
     -- Logo fade in with scale
     logo.ImageTransparency = 1
     logoContainer.Size = UDim2.new(0, 150, 0, 150)
@@ -179,98 +196,26 @@ local function playLoadingAnimations()
     wait(0.3)
     logoFadeTween:Play()
 
-    -- Credits text fade in
+    -- Fade in text elements
     wait(0.5)
-    local creditsFadeTween = TweenService:Create(
-        creditsText,
-        TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 0,
-        }
-    )
-    creditsFadeTween:Play()
-
-    -- Made by text fade in
+    fadeIn(creditsText, 0.6)
     wait(0.3)
-    local madeByFadeTween = TweenService:Create(
-        madeByText,
-        TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 0,
-        }
-    )
-    madeByFadeTween:Play()
-
-    -- Game name fade in
+    fadeIn(madeByText, 0.6)
     wait(0.3)
-    local gameNameFadeTween = TweenService:Create(
-        gameNameText,
-        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 0,
-        }
-    )
-    gameNameFadeTween:Play()
-
-    -- Status text fade in
+    fadeIn(gameNameText, 0.5)
     wait(0.3)
-    local statusFadeTween = TweenService:Create(
-        statusText,
-        TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 0,
-        }
-    )
-    statusFadeTween:Play()
-
-    -- Loading percentage fade in
+    fadeIn(statusText, 0.4)
     wait(0.2)
-    local percentFadeTween = TweenService:Create(
-        loadingPercent,
-        TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 0,
-        }
-    )
-    percentFadeTween:Play()
+    fadeIn(loadingPercent, 0.4)
 
-    -- Smart loading sequence with realistic steps
-    wait(0.5)
-
+    -- Loading steps
     local loadingSteps = {
-        {
-            text = 'Initializing script environment...',
-            percent = 5,
-            duration = 0.8,
-        },
-        { text = 'Loading core modules...', percent = 15, duration = 0.6 },
-        {
-            text = 'Preparing script features...',
-            percent = 25,
-            duration = 1.0,
-        },
-        {
-            text = 'Verifying game compatibility...',
-            percent = 40,
-            duration = 0.7,
-        },
-        {
-            text = 'Loading game-specific features...',
-            percent = 55,
-            duration = 0.9,
-        },
-        {
-            text = 'Setting up components...',
-            percent = 70,
-            duration = 0.8,
-        },
-        {
-            text = 'Finalizing setup...',
-            percent = 85,
-            duration = 0.7,
-        },
-        { text = 'Almost ready...', percent = 95, duration = 0.6 },
-        { text = 'Loading complete!', percent = 100, duration = 0.5 },
+        {text = 'Initializing...', percent = 10, duration = 0.5},
+        {text = 'Loading core modules...', percent = 30, duration = 0.5},
+        {text = 'Preparing features...', percent = 50, duration = 0.5},
+        {text = 'Setting up interface...', percent = 70, duration = 0.5},
+        {text = 'Finalizing...', percent = 90, duration = 0.5},
+        {text = 'Complete!', percent = 100, duration = 0.5}
     }
 
     for _, step in ipairs(loadingSteps) do
@@ -279,103 +224,60 @@ local function playLoadingAnimations()
 
         local barTween = TweenService:Create(
             loadingBar,
-            TweenInfo.new(
-                step.duration * 0.8,
-                Enum.EasingStyle.Quad,
-                Enum.EasingDirection.Out
-            ),
-            {
-                Size = UDim2.new(step.percent / 100, 0, 1, 0),
-            }
+            TweenInfo.new(step.duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = UDim2.new(step.percent / 100, 0, 1, 0)}
         )
         barTween:Play()
-
         wait(step.duration)
     end
 
-    -- Final completion effect
-    wait(0.8)
-    statusText.Text = 'Starting script...'
+    -- Fade out everything
+    wait(0.5)
+    
+    local fadeOutTweens = {}
+    local function fadeOut(obj)
+        local tween = TweenService:Create(
+            obj,
+            TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {TextTransparency = 1}
+        )
+        table.insert(fadeOutTweens, tween)
+        tween:Play()
+    end
 
-    wait(1)
+    -- Fade out all elements
+    fadeOut(creditsText)
+    fadeOut(madeByText)
+    fadeOut(gameNameText)
+    fadeOut(statusText)
+    fadeOut(loadingPercent)
 
-    -- Fade out loading screen
-    local fadeOutTween = TweenService:Create(
-        loadingFrame,
-        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            BackgroundTransparency = 1,
-        }
-    )
-
-    local logoFadeOutTween = TweenService:Create(
+    -- Fade out logo and background
+    local logoFadeOut = TweenService:Create(
         logo,
         TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            ImageTransparency = 1,
-        }
+        {ImageTransparency = 1}
     )
+    logoFadeOut:Play()
 
-    local creditsFadeOutTween = TweenService:Create(
-        creditsText,
+    local backgroundFadeOut = TweenService:Create(
+        loadingFrame,
         TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 1,
-        }
+        {BackgroundTransparency = 1}
     )
+    backgroundFadeOut:Play()
 
-    local madeByFadeOutTween = TweenService:Create(
-        madeByText,
-        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 1,
-        }
-    )
+    -- Wait for all fade out tweens to complete
+    wait(0.6)
 
-    local gameNameFadeOutTween = TweenService:Create(
-        gameNameText,
-        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 1,
-        }
-    )
-
-    local statusFadeOutTween = TweenService:Create(
-        statusText,
-        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 1,
-        }
-    )
-
-    local percentFadeOutTween = TweenService:Create(
-        loadingPercent,
-        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {
-            TextTransparency = 1,
-        }
-    )
-
-    fadeOutTween:Play()
-    logoFadeOutTween:Play()
-    creditsFadeOutTween:Play()
-    madeByFadeOutTween:Play()
-    gameNameFadeOutTween:Play()
-    statusFadeOutTween:Play()
-    percentFadeOutTween:Play()
-
-    fadeOutTween.Completed:Connect(function()
-        loadingFrame:Destroy()
-        -- Here you can directly load your script or call your main function
-        loadScript() -- You'll need to define this function or replace with your script loading code
-    end)
+    -- Clean up and proceed
+    loadingFrame:Destroy()
+    
+    -- Load the main script
+    loadScript()
 end
 
--- Function to load your actual script
-local function loadScript()
-    -- Put your main script code here
-    -- This is where you would put the code that was previously behind the key system
-end
-
--- Start loading sequence
-playLoadingAnimations()
+-- Start the loading sequence
+spawn(function()
+    playLoadingAnimations()
+end)
