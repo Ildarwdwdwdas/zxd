@@ -151,20 +151,6 @@ loadingPercent.Font = Enum.Font.GothamBold
 loadingPercent.TextTransparency = 1
 loadingPercent.Parent = loadingFrame
 
--- Copy Utility
-local function copyToClipboard(text)
-    if setclipboard then
-        setclipboard(text)
-        pcall(function()
-            game.StarterGui:SetCore('SendNotification', {
-                Title = 'Copied!',
-                Text = 'Link copied to clipboard.',
-                Duration = 3,
-            })
-        end)
-    end
-end
-
 -- Loading Animations with Smart Status Updates
 local function playLoadingAnimations()
     -- Logo fade in with scale
@@ -259,7 +245,7 @@ local function playLoadingAnimations()
         },
         { text = 'Loading core modules...', percent = 15, duration = 0.6 },
         {
-            text = 'Connecting to authentication server...',
+            text = 'Preparing script features...',
             percent = 25,
             duration = 1.0,
         },
@@ -274,17 +260,17 @@ local function playLoadingAnimations()
             duration = 0.9,
         },
         {
-            text = 'Injecting security protocols...',
+            text = 'Setting up components...',
             percent = 70,
             duration = 0.8,
         },
         {
-            text = 'Establishing secure connection...',
+            text = 'Finalizing setup...',
             percent = 85,
             duration = 0.7,
         },
-        { text = 'Finalizing initialization...', percent = 95, duration = 0.6 },
-        { text = 'Ready to authenticate!', percent = 100, duration = 0.5 },
+        { text = 'Almost ready...', percent = 95, duration = 0.6 },
+        { text = 'Loading complete!', percent = 100, duration = 0.5 },
     }
 
     for _, step in ipairs(loadingSteps) do
@@ -309,7 +295,7 @@ local function playLoadingAnimations()
 
     -- Final completion effect
     wait(0.8)
-    statusText.Text = 'Loading complete! Starting authentication...'
+    statusText.Text = 'Starting script...'
 
     wait(1)
 
@@ -380,8 +366,15 @@ local function playLoadingAnimations()
 
     fadeOutTween.Completed:Connect(function()
         loadingFrame:Destroy()
-        -- createKeySystem() -- Удалено, чтобы убрать ключ систему
+        -- Here you can directly load your script or call your main function
+        loadScript() -- You'll need to define this function or replace with your script loading code
     end)
+end
+
+-- Function to load your actual script
+local function loadScript()
+    -- Put your main script code here
+    -- This is where you would put the code that was previously behind the key system
 end
 
 -- Start loading sequence
