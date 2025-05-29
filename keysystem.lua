@@ -29,83 +29,180 @@ local function loadScript()
     end
 
     -- Create Main GUI
-    local mainGui = Instance.new("ScreenGui")
-    mainGui.Name = "GrowAGardenGUI"
-    mainGui.Parent = playerGui
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "GrowAGardenGUI"
+    ScreenGui.Parent = playerGui
+    ScreenGui.ResetOnSpawn = false
 
-    -- Create Main Frame
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 200, 0, 300)
-    mainFrame.Position = UDim2.new(0.85, 0, 0.5, -150)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Parent = mainGui
+    -- Create Main Frame with blur effect
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
 
-    -- Add Corner
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = mainFrame
+    -- Add blur effect
+    local blur = Instance.new("BlurEffect")
+    blur.Size = 10
+    blur.Parent = game:GetService("Lighting")
 
-    -- Title
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 30)
-    title.Position = UDim2.new(0, 0, 0, 0)
-    title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    title.BorderSizePixel = 0
-    title.Text = "Grow A Garden Farm"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 14
-    title.Parent = mainFrame
+    -- Create Corner
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = MainFrame
 
-    local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, 10)
-    titleCorner.Parent = title
+    -- Create Title
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Title.BorderSizePixel = 0
+    Title.Text = "Grow-a-Garden Hub"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 20
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = MainFrame
+
+    local TitleCorner = Instance.new("UICorner")
+    TitleCorner.CornerRadius = UDim.new(0, 10)
+    TitleCorner.Parent = Title
+
+    -- Create Container for buttons
+    local Container = Instance.new("ScrollingFrame")
+    Container.Name = "Container"
+    Container.Size = UDim2.new(1, -20, 1, -60)
+    Container.Position = UDim2.new(0, 10, 0, 50)
+    Container.BackgroundTransparency = 1
+    Container.ScrollBarThickness = 2
+    Container.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+    Container.Parent = MainFrame
+
+    -- Auto Layout for Container
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Padding = UDim.new(0, 10)
+    UIListLayout.Parent = Container
 
     -- Variables for farming
     local autoFarm = false
-    local autoSell = false
     local autoWater = false
-    local autoBuySeeds = false
+    local autoSell = false
     local selectedSeed = "Tomato"
+    local farmingSpeed = 1
 
-    -- Function to create buttons
-    local function createButton(name, posY, callback)
+    -- Function to create section
+    local function createSection(name)
+        local section = Instance.new("Frame")
+        section.Name = name .. "Section"
+        section.Size = UDim2.new(1, 0, 0, 30)
+        section.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+        section.BorderSizePixel = 0
+        
+        local sectionCorner = Instance.new("UICorner")
+        sectionCorner.CornerRadius = UDim.new(0, 6)
+        sectionCorner.Parent = section
+        
+        local sectionTitle = Instance.new("TextLabel")
+        sectionTitle.Size = UDim2.new(1, 0, 1, 0)
+        sectionTitle.BackgroundTransparency = 1
+        sectionTitle.Text = name
+        sectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        sectionTitle.TextSize = 14
+        sectionTitle.Font = Enum.Font.GothamBold
+        sectionTitle.Parent = section
+        
+        section.Parent = Container
+        return section
+    end
+
+    -- Function to create toggle button
+    local function createToggle(name, callback)
         local button = Instance.new("TextButton")
-        button.Size = UDim2.new(0.9, 0, 0, 30)
-        button.Position = UDim2.new(0.05, 0, 0, posY)
-        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        button.Size = UDim2.new(1, 0, 0, 35)
+        button.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
         button.BorderSizePixel = 0
-        button.Text = name
+        button.Text = name .. ": OFF"
         button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        button.Font = Enum.Font.Gotham
         button.TextSize = 14
-        button.Parent = mainFrame
-
+        button.Font = Enum.Font.Gotham
+        button.Parent = Container
+        
         local buttonCorner = Instance.new("UICorner")
         buttonCorner.CornerRadius = UDim.new(0, 6)
         buttonCorner.Parent = button
-
-        button.MouseButton1Click:Connect(callback)
+        
+        local isEnabled = false
+        
+        button.MouseButton1Click:Connect(function()
+            isEnabled = not isEnabled
+            button.Text = name .. ": " .. (isEnabled and "ON" or "OFF")
+            button.BackgroundColor3 = isEnabled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(45, 45, 55)
+            callback(isEnabled)
+        end)
+        
         return button
     end
 
-    -- Create Dropdown for Seeds
-    local seedDropdown = Instance.new("TextButton")
-    seedDropdown.Size = UDim2.new(0.9, 0, 0, 30)
-    seedDropdown.Position = UDim2.new(0.05, 0, 0, 40)
-    seedDropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    seedDropdown.BorderSizePixel = 0
-    seedDropdown.Text = "Seed: " .. selectedSeed
-    seedDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-    seedDropdown.Font = Enum.Font.Gotham
-    seedDropdown.TextSize = 14
-    seedDropdown.Parent = mainFrame
-
-    local dropdownCorner = Instance.new("UICorner")
-    dropdownCorner.CornerRadius = UDim.new(0, 6)
-    dropdownCorner.Parent = seedDropdown
+    -- Create dropdown for seeds
+    local function createDropdown(options)
+        local dropdown = Instance.new("Frame")
+        dropdown.Size = UDim2.new(1, 0, 0, 35)
+        dropdown.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        dropdown.BorderSizePixel = 0
+        dropdown.Parent = Container
+        
+        local dropdownCorner = Instance.new("UICorner")
+        dropdownCorner.CornerRadius = UDim.new(0, 6)
+        dropdownCorner.Parent = dropdown
+        
+        local selected = Instance.new("TextButton")
+        selected.Size = UDim2.new(1, 0, 1, 0)
+        selected.BackgroundTransparency = 1
+        selected.Text = "Selected Seed: " .. selectedSeed
+        selected.TextColor3 = Color3.fromRGB(255, 255, 255)
+        selected.TextSize = 14
+        selected.Font = Enum.Font.Gotham
+        selected.Parent = dropdown
+        
+        local optionsList = Instance.new("Frame")
+        optionsList.Size = UDim2.new(1, 0, 0, #options * 35)
+        optionsList.Position = UDim2.new(0, 0, 1, 5)
+        optionsList.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        optionsList.BorderSizePixel = 0
+        optionsList.Visible = false
+        optionsList.ZIndex = 2
+        optionsList.Parent = dropdown
+        
+        local optionsCorner = Instance.new("UICorner")
+        optionsCorner.CornerRadius = UDim.new(0, 6)
+        optionsCorner.Parent = optionsList
+        
+        for i, option in ipairs(options) do
+            local optionButton = Instance.new("TextButton")
+            optionButton.Size = UDim2.new(1, 0, 0, 35)
+            optionButton.Position = UDim2.new(0, 0, 0, (i-1) * 35)
+            optionButton.BackgroundTransparency = 1
+            optionButton.Text = option
+            optionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            optionButton.TextSize = 14
+            optionButton.Font = Enum.Font.Gotham
+            optionButton.ZIndex = 2
+            optionButton.Parent = optionsList
+            
+            optionButton.MouseButton1Click:Connect(function()
+                selectedSeed = option
+                selected.Text = "Selected Seed: " .. option
+                optionsList.Visible = false
+            end)
+        end
+        
+        selected.MouseButton1Click:Connect(function()
+            optionsList.Visible = not optionsList.Visible
+        end)
+        
+        return dropdown
+    end
 
     -- Farming Functions
     local function getClosestPlot()
@@ -116,7 +213,7 @@ local function loadScript()
         local minDist = math.huge
         
         for _, plot in pairs(plots:GetChildren()) do
-            if plot:IsA("Model") then
+            if plot:IsA("Model") and plot:FindFirstChild("PrimaryPart") then
                 local distance = (plot.PrimaryPart.Position - humanoidRootPart.Position).Magnitude
                 if distance < minDist then
                     minDist = distance
@@ -136,18 +233,7 @@ local function loadScript()
                 [2] = selectedSeed,
                 [3] = plot
             }
-            ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
-        end
-    end
-
-    local function harvestCrop()
-        local plot = getClosestPlot()
-        if plot then
-            local args = {
-                [1] = "Harvest",
-                [2] = plot
-            }
-            ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+            ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer(unpack(args))
         end
     end
 
@@ -158,7 +244,18 @@ local function loadScript()
                 [1] = "Water",
                 [2] = plot
             }
-            ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+            ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer(unpack(args))
+        end
+    end
+
+    local function harvestCrop()
+        local plot = getClosestPlot()
+        if plot then
+            local args = {
+                [1] = "Harvest",
+                [2] = plot
+            }
+            ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer(unpack(args))
         end
     end
 
@@ -166,44 +263,62 @@ local function loadScript()
         local args = {
             [1] = "Sell"
         }
-        ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+        ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer(unpack(args))
     end
 
-    -- Create Buttons
-    local autoFarmButton = createButton("Auto Farm: OFF", 80, function()
-        autoFarm = not autoFarm
-        autoFarmButton.Text = "Auto Farm: " .. (autoFarm and "ON" or "OFF")
-        autoFarmButton.BackgroundColor3 = autoFarm and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
-        
-        while autoFarm do
-            plantSeed()
-            wait(1)
-            waterPlot()
-            wait(5) -- Wait for crop to grow
-            harvestCrop()
-            wait(0.5)
+    -- Create Sections
+    createSection("Main")
+
+    -- Create Seed Dropdown
+    createDropdown({"Tomato", "Carrot", "Corn", "Watermelon", "Strawberry", "Pumpkin"})
+
+    -- Create Toggles
+    createToggle("Auto Farm", function(enabled)
+        autoFarm = enabled
+        if enabled then
+            notify("Auto Farm", "Started auto farming", 3)
+            spawn(function()
+                while autoFarm do
+                    plantSeed()
+                    wait(0.5)
+                    waterPlot()
+                    wait(5)
+                    harvestCrop()
+                    wait(0.5)
+                end
+            end)
+        else
+            notify("Auto Farm", "Stopped auto farming", 3)
         end
     end)
 
-    local autoSellButton = createButton("Auto Sell: OFF", 120, function()
-        autoSell = not autoSell
-        autoSellButton.Text = "Auto Sell: " .. (autoSell and "ON" or "OFF")
-        autoSellButton.BackgroundColor3 = autoSell and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
-        
-        while autoSell do
-            sellCrops()
-            wait(1)
+    createToggle("Auto Water", function(enabled)
+        autoWater = enabled
+        if enabled then
+            notify("Auto Water", "Started auto watering", 3)
+            spawn(function()
+                while autoWater do
+                    waterPlot()
+                    wait(1)
+                end
+            end)
+        else
+            notify("Auto Water", "Stopped auto watering", 3)
         end
     end)
 
-    local autoWaterButton = createButton("Auto Water: OFF", 160, function()
-        autoWater = not autoWater
-        autoWaterButton.Text = "Auto Water: " .. (autoWater and "ON" or "OFF")
-        autoWaterButton.BackgroundColor3 = autoWater and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
-        
-        while autoWater do
-            waterPlot()
-            wait(1)
+    createToggle("Auto Sell", function(enabled)
+        autoSell = enabled
+        if enabled then
+            notify("Auto Sell", "Started auto selling", 3)
+            spawn(function()
+                while autoSell do
+                    sellCrops()
+                    wait(1)
+                end
+            end)
+        else
+            notify("Auto Sell", "Stopped auto selling", 3)
         end
     end)
 
@@ -215,15 +330,15 @@ local function loadScript()
 
     local function update(input)
         local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 
-    title.InputBegan:Connect(function(input)
+    Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
-            startPos = mainFrame.Position
-
+            startPos = MainFrame.Position
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -232,7 +347,7 @@ local function loadScript()
         end
     end)
 
-    title.InputChanged:Connect(function(input)
+    Title.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
@@ -245,7 +360,7 @@ local function loadScript()
     end)
 
     -- Initial notification
-    notify("Script Loaded", "Farm GUI has been loaded!", 5)
+    notify("Script Loaded", "Grow-a-Garden Hub is ready!", 5)
 end
 
 -- Main GUI Setup
