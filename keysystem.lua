@@ -3,10 +3,13 @@ local Players = game:GetService('Players')
 local TweenService = game:GetService('TweenService')
 local UserInputService = game:GetService('UserInputService')
 local MarketplaceService = game:GetService('MarketplaceService')
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Variables
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild('PlayerGui')
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local currentGameName = 'Loading...'
 
 -- Get current game name
@@ -14,7 +17,7 @@ pcall(function()
     currentGameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
 end)
 
--- Function to load your actual script
+-- Main Script Function
 local function loadScript()
     -- Create notification function
     local function notify(title, text, duration)
@@ -25,63 +28,224 @@ local function loadScript()
         })
     end
 
-    -- Notify that script is starting
-    notify("Script Status", "Starting script...", 3)
-    
-    -- Add a small delay to ensure notification is visible
-    wait(1)
+    -- Create Main GUI
+    local mainGui = Instance.new("ScreenGui")
+    mainGui.Name = "GrowAGardenGUI"
+    mainGui.Parent = playerGui
 
-    -- Load the main script
-    local success, result = pcall(function()
-        -- Try to load the script from URL
-        local scriptUrl = "https://raw.githubusercontent.com/WorkinkForRoblox/Script/main/Grow%20A%20Garden"
-        local scriptContent = game:HttpGet(scriptUrl)
-        local scriptFunction = loadstring(scriptContent)
-        if scriptFunction then
-            scriptFunction()
-            return true
+    -- Create Main Frame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 200, 0, 300)
+    mainFrame.Position = UDim2.new(0.85, 0, 0.5, -150)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = mainGui
+
+    -- Add Corner
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = mainFrame
+
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    title.BorderSizePixel = 0
+    title.Text = "Grow A Garden Farm"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 14
+    title.Parent = mainFrame
+
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = title
+
+    -- Variables for farming
+    local autoFarm = false
+    local autoSell = false
+    local autoWater = false
+    local autoBuySeeds = false
+    local selectedSeed = "Tomato"
+
+    -- Function to create buttons
+    local function createButton(name, posY, callback)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0.9, 0, 0, 30)
+        button.Position = UDim2.new(0.05, 0, 0, posY)
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        button.BorderSizePixel = 0
+        button.Text = name
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Font = Enum.Font.Gotham
+        button.TextSize = 14
+        button.Parent = mainFrame
+
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = UDim.new(0, 6)
+        buttonCorner.Parent = button
+
+        button.MouseButton1Click:Connect(callback)
+        return button
+    end
+
+    -- Create Dropdown for Seeds
+    local seedDropdown = Instance.new("TextButton")
+    seedDropdown.Size = UDim2.new(0.9, 0, 0, 30)
+    seedDropdown.Position = UDim2.new(0.05, 0, 0, 40)
+    seedDropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    seedDropdown.BorderSizePixel = 0
+    seedDropdown.Text = "Seed: " .. selectedSeed
+    seedDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+    seedDropdown.Font = Enum.Font.Gotham
+    seedDropdown.TextSize = 14
+    seedDropdown.Parent = mainFrame
+
+    local dropdownCorner = Instance.new("UICorner")
+    dropdownCorner.CornerRadius = UDim.new(0, 6)
+    dropdownCorner.Parent = seedDropdown
+
+    -- Farming Functions
+    local function getClosestPlot()
+        local plots = workspace:FindFirstChild("Plots")
+        if not plots then return nil end
+        
+        local closest = nil
+        local minDist = math.huge
+        
+        for _, plot in pairs(plots:GetChildren()) do
+            if plot:IsA("Model") then
+                local distance = (plot.PrimaryPart.Position - humanoidRootPart.Position).Magnitude
+                if distance < minDist then
+                    minDist = distance
+                    closest = plot
+                end
+            end
         end
-        return false
+        
+        return closest
+    end
+
+    local function plantSeed()
+        local plot = getClosestPlot()
+        if plot then
+            local args = {
+                [1] = "Plant",
+                [2] = selectedSeed,
+                [3] = plot
+            }
+            ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+        end
+    end
+
+    local function harvestCrop()
+        local plot = getClosestPlot()
+        if plot then
+            local args = {
+                [1] = "Harvest",
+                [2] = plot
+            }
+            ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+        end
+    end
+
+    local function waterPlot()
+        local plot = getClosestPlot()
+        if plot then
+            local args = {
+                [1] = "Water",
+                [2] = plot
+            }
+            ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+        end
+    end
+
+    local function sellCrops()
+        local args = {
+            [1] = "Sell"
+        }
+        ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+    end
+
+    -- Create Buttons
+    local autoFarmButton = createButton("Auto Farm: OFF", 80, function()
+        autoFarm = not autoFarm
+        autoFarmButton.Text = "Auto Farm: " .. (autoFarm and "ON" or "OFF")
+        autoFarmButton.BackgroundColor3 = autoFarm and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
+        
+        while autoFarm do
+            plantSeed()
+            wait(1)
+            waterPlot()
+            wait(5) -- Wait for crop to grow
+            harvestCrop()
+            wait(0.5)
+        end
     end)
 
-    if success and result then
-        notify("Script Status", "Script loaded successfully!", 5)
-    else
-        notify("Error", "Failed to load script. Please try again.", 5)
-        warn("Script loading error:", result)
+    local autoSellButton = createButton("Auto Sell: OFF", 120, function()
+        autoSell = not autoSell
+        autoSellButton.Text = "Auto Sell: " .. (autoSell and "ON" or "OFF")
+        autoSellButton.BackgroundColor3 = autoSell and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
+        
+        while autoSell do
+            sellCrops()
+            wait(1)
+        end
+    end)
+
+    local autoWaterButton = createButton("Auto Water: OFF", 160, function()
+        autoWater = not autoWater
+        autoWaterButton.Text = "Auto Water: " .. (autoWater and "ON" or "OFF")
+        autoWaterButton.BackgroundColor3 = autoWater and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
+        
+        while autoWater do
+            waterPlot()
+            wait(1)
+        end
+    end)
+
+    -- Make GUI draggable
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
-    
-    -- Create a simple GUI to show the script is running
-    local successGui = Instance.new("ScreenGui")
-    successGui.Name = "ScriptSuccessGui"
-    
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 200, 0, 50)
-    frame.Position = UDim2.new(0.5, -100, 0, 20)
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    frame.BorderSizePixel = 0
-    frame.Parent = successGui
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = frame
-    
-    local text = Instance.new("TextLabel")
-    text.Size = UDim2.new(1, 0, 1, 0)
-    text.BackgroundTransparency = 1
-    text.Text = success and "Script Running ✅" or "Script Error ❌"
-    text.TextColor3 = Color3.fromRGB(255, 255, 255)
-    text.Font = Enum.Font.GothamBold
-    text.TextSize = 16
-    text.Parent = frame
-    
-    successGui.Parent = player:WaitForChild("PlayerGui")
-    
-    -- Animate the frame
-    frame.Position = UDim2.new(0.5, -100, -0.1, 0)
-    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back)
-    local tween = TweenService:Create(frame, tweenInfo, {Position = UDim2.new(0.5, -100, 0, 20)})
-    tween:Play()
+
+    title.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    title.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+
+    -- Initial notification
+    notify("Script Loaded", "Farm GUI has been loaded!", 5)
 end
 
 -- Main GUI Setup
