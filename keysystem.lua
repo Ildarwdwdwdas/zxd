@@ -16,9 +16,58 @@ end)
 
 -- Function to load your actual script
 local function loadScript()
-    -- Put your main script code here
-    print("Script loaded successfully!")
-    -- Add your main script code here
+    -- Create notification function
+    local function notify(title, text, duration)
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title;
+            Text = text;
+            Duration = duration;
+        })
+    end
+
+    -- Notify that script is starting
+    notify("Script Status", "Starting script...", 3)
+    
+    -- Add a small delay to ensure notification is visible
+    wait(1)
+    
+    -- Your main script code goes here
+    notify("Script Status", "Script loaded successfully!", 5)
+    
+    -- Create a simple GUI to show the script is running
+    local successGui = Instance.new("ScreenGui")
+    successGui.Name = "ScriptSuccessGui"
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 200, 0, 50)
+    frame.Position = UDim2.new(0.5, -100, 0, 20)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BorderSizePixel = 0
+    frame.Parent = successGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = frame
+    
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = "Script Running ✅"
+    text.TextColor3 = Color3.fromRGB(255, 255, 255)
+    text.Font = Enum.Font.GothamBold
+    text.TextSize = 16
+    text.Parent = frame
+    
+    successGui.Parent = player:WaitForChild("PlayerGui")
+    
+    -- Animate the frame
+    frame.Position = UDim2.new(0.5, -100, -0.1, 0)
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back)
+    local tween = TweenService:Create(frame, tweenInfo, {Position = UDim2.new(0.5, -100, 0, 20)})
+    tween:Play()
+    
+    -- Add your actual script functionality here
+    print("Script is now running!")
 end
 
 -- Main GUI Setup
